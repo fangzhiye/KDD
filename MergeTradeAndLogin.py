@@ -8,12 +8,12 @@ Created on Fri Nov 17 18:17:49 2017
 
 import pandas as pd
 import numpy as np
-import time
-import datetime
+#import time
+#import datetime
 
 stdtime = '2017-11-01 12:00:00'
 lStdTime = len(stdtime)
-dayseconds = 24*3600
+dayseconds = 24*3600*30*6
 
 train_login = pd.read_csv('./input/preTrainLogin.csv')
 train_trade = pd.read_csv('./input/newPreTrade.csv')
@@ -21,7 +21,8 @@ train_trade = pd.read_csv('./input/newPreTrade.csv')
 #originTrade = originTrade.sort_values(by = ['id','time'],ascending = False)
 #originTrade.rename(columns={'time':'tradeTime'})
 #train_trade = pd.concat([train_trade,originTrade['tradeTime']],axis = 1)
-
+train_login = train_login.sort_values(by = ['id','timestamp'],ascending = True)
+train_trade = train_trade.sort_values(by = ['id', 'time'],ascending = True)
 [m_login,n_login] = train_login.shape
 [m_trade,n_trade] = train_trade.shape
 
@@ -81,27 +82,34 @@ train_trade['logis_sec'] = np.nan
 train_trade['logtime'] = ''
 
 preTrades = 0
+preLogId = 0
+isCount = False
 idSum = 0   
 #m_login = 1000
 #m_trade = 300
 for i in range(m_login):
+    
     logId = train_login.iloc[i]['id']
     logTime = train_login.iloc[i]['timestamp']
-    preTrades = idSum
+    if not logId == preLogId: isCount = True
+    else: isCount = False
+    if not logId == preLogId: preTrades = idSum
     print('logId:',logId)
-    for j in range (m_trade):
-        idSum = idSum + 1
+    for j in range (preTrades,m_trade):
+        
+      #  idSum = idSum + 1
         tradeId = train_trade.iloc[j]['id']
-        #print('logId:',logId)
+       # print('tradeId:',tradeId)
        # nextTradeTime = 0
         if logId == tradeId:
+                if isCount: idSum = idSum + 1
                 curTradeTime = train_trade.iloc[j]['time']
-               # print('curLogTime:'+curLogTime)
+               #print('curLogTime:'+curLogTime)
                # nextTradeTime = 0
                # if  tradeId == train_trade.iloc[j+1]['id'] : 
                    # nextTradeTime = train_trade.iloc[j+1]['time']
                    # print('nextLogTime:'+nextLogTime)
-                if  logTime < curTradeTime  and curTradeTime - logTime <= dayseconds*7 :
+                if  logTime < curTradeTime  and curTradeTime - logTime <= dayseconds :
                 #    print('logiId:isrisk_:')
                  #   print(train_trade.iloc[i]['is_risk'])
                     train_trade.iat[j,5] = train_login.iloc[i]['timelong']
@@ -116,8 +124,12 @@ for i in range(m_login):
                     train_trade.iat[j,14] = train_login.iloc[i]['is_sec']
                     train_trade.iat[j,15] = train_login.iloc[i]['time']
                 else: continue
-        elif logId < tradeId : continue 
-        elif logId > tradeId  : break
+        elif logId > tradeId : 
+            preLogId = logId
+            continue 
+        else :
+            preLogId = logId
+            break
 train_login.to_csv('newlogin.csv',index=False)
 train_trade.to_csv('newtrade.csv',index=False)
    
