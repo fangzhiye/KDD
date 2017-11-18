@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 18 16:50:36 2017
+
+@author: zhenfang
+"""
+import pandas as pd
+import numpy as np
+import time
+import datetime
+
+stdtime = '2017-11-01 12:00:00'
+lStdTime = len(stdtime)
+dayseconds = 24*3600
+
+#train_login = pd.read_csv('./input/preTrainLogin.csv')
+train_trade = pd.read_csv('./input/preTrainTrade.csv')
+originTrade = pd.read_csv('./input/t_trade.csv')
+originTrade = originTrade.sort_values(by = ['id','time'],ascending = False)
+originTrade = originTrade.rename(columns={'time':'tradeTime'})
+train_trade['tradeTime'] = ''
+[m,n] = originTrade.shape
+for i in range(m):
+    train_trade.iat[i,4] = originTrade.iloc[i]['tradeTime']
+#train_trade.append(originTrade['tradeTime'],axis = 1)
+#train_trade = pd.concat([train_trade,originTrade['tradeTime']],axis = 1,join='inner')
+train_trade.to_csv('newPreTrade.csv',index = False)
