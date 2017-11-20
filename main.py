@@ -10,8 +10,8 @@ from sklearn.cross_validation import train_test_split
 import xgboost as xgb
 
 # Read in our input data
-df_train = pd.read_csv('./input/login.csv')
-df_test = pd.read_csv('./input/t_login_test.csv')
+df_train = pd.read_csv('./input/TrainData.csv')
+df_test = pd.read_csv('./input/TestData.csv')
 
 # This prints out (rows, columns) in each dataframe
 print('Train shape:', df_train.shape)
@@ -20,8 +20,8 @@ print('Test shape:', df_test.shape)
 print('Columns:', df_train.columns)
 
 y_train = df_train['is_risk'].values
-id_train = df_train['id'].values
-id_test = df_test['id'].values
+id_train = df_train['rowkey'].values
+id_test = df_test['rowkey'].values
 '''
 for i in range(m_trade):
     df_train.loc[i,'time'] = ISOString2Time(df_train.loc[i,'time'][0:19])
@@ -29,10 +29,15 @@ print('43line')
 for i in range(m_login):
     train_login.loc[i,'time'] = ISOString2Time(train_login.loc[i,'time'][0:19])
  '''   
+df_train = df_train.rename(columns={'tradeTime':'tradetime'})
+df_train['logis_scan'] = df_train['logis_scan'].astype('bool')
+df_train['logis_sec'] = df_train['logis_sec'].astype('bool')
+df_test['logis_scan'] = df_test['logis_scan'].astype('bool')
+df_test['logis_sec'] = df_test['logis_sec'].astype('bool')
 # We drop these variables as we don't want to train on them
 # The other 57 columns are all numerical and can be trained on without preprocessing
-x_train = df_train.drop(['is_risk', 'id','time'], axis=1)#remove target id columns
-x_test = df_test.drop(['id','time'], axis=1)
+x_train = df_train.drop(['is_risk', 'id','tradetime','logtime'], axis=1)#remove target id columns
+x_test = df_test.drop(['id','tradetime','logtime'], axis=1)
 # Take a random 20% of the dataset as validation data
 x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2, random_state=4242)
 print('Train samples: {} Validation samples: {}'.format(len(x_train), len(x_valid)))
@@ -85,8 +90,8 @@ p_test = mdl.predict(d_test)
 
 # Create a submission file
 sub = pd.DataFrame()
-sub['id'] = id_test
+sub['rowkey'] = id_test
 sub['is_risk'] = p_test
-sub.to_csv('xgb1.csv', index=False)
+sub.to_csv('PredictTrade.csv', index=False)
 
 print(sub.head())
